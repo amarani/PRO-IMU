@@ -29,13 +29,16 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.toolStrip_TopToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.toolStripComboBox_com_port = new System.Windows.Forms.ToolStripComboBox();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButton_refreshports = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton_connect = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton_disconnect = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripLabel_MindShine = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripButton_showVisualizer = new System.Windows.Forms.ToolStripButton();
             this.panel_devices = new System.Windows.Forms.Panel();
             this.treeView_devices = new System.Windows.Forms.TreeView();
             this.panel_specifications = new System.Windows.Forms.Panel();
@@ -59,11 +62,6 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip_TopMenu = new System.Windows.Forms.MenuStrip();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.toolStripButton_refreshports = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton_connect = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton_disconnect = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton_showVisualizer = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStrip_TopToolStrip.SuspendLayout();
             this.panel_devices.SuspendLayout();
             this.panel_specifications.SuspendLayout();
@@ -86,8 +84,7 @@
             this.toolStripButton_disconnect,
             this.toolStripSeparator2,
             this.toolStripLabel_MindShine,
-            this.toolStripButton_showVisualizer,
-            this.toolStripButton1});
+            this.toolStripButton_showVisualizer});
             this.toolStrip_TopToolStrip.Location = new System.Drawing.Point(0, 24);
             this.toolStrip_TopToolStrip.Name = "toolStrip_TopToolStrip";
             this.toolStrip_TopToolStrip.Size = new System.Drawing.Size(531, 25);
@@ -112,6 +109,39 @@
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
+            // toolStripButton_refreshports
+            // 
+            this.toolStripButton_refreshports.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton_refreshports.Image = global::Probotix.Mpu.Properties.Resources.arrow_refresh;
+            this.toolStripButton_refreshports.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton_refreshports.Name = "toolStripButton_refreshports";
+            this.toolStripButton_refreshports.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton_refreshports.Text = "toolStripButton1";
+            this.toolStripButton_refreshports.ToolTipText = "Refresh Ports";
+            this.toolStripButton_refreshports.Click += new System.EventHandler(this.toolStripButton_refreshports_Click);
+            // 
+            // toolStripButton_connect
+            // 
+            this.toolStripButton_connect.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton_connect.Image = global::Probotix.Mpu.Properties.Resources.Connect;
+            this.toolStripButton_connect.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton_connect.Name = "toolStripButton_connect";
+            this.toolStripButton_connect.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton_connect.Text = "toolStripButton1";
+            this.toolStripButton_connect.ToolTipText = "Connect";
+            this.toolStripButton_connect.Click += new System.EventHandler(this.toolStripButton_connect_Click);
+            // 
+            // toolStripButton_disconnect
+            // 
+            this.toolStripButton_disconnect.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton_disconnect.Image = global::Probotix.Mpu.Properties.Resources.Disconnect;
+            this.toolStripButton_disconnect.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton_disconnect.Name = "toolStripButton_disconnect";
+            this.toolStripButton_disconnect.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton_disconnect.Text = "toolStripButton2";
+            this.toolStripButton_disconnect.ToolTipText = "Disconnect";
+            this.toolStripButton_disconnect.Click += new System.EventHandler(this.toolStripButton_disconnect_Click);
+            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
@@ -126,6 +156,16 @@
             this.toolStripLabel_MindShine.Name = "toolStripLabel_MindShine";
             this.toolStripLabel_MindShine.Size = new System.Drawing.Size(138, 22);
             this.toolStripLabel_MindShine.Text = "http://www.mindshine.ir";
+            // 
+            // toolStripButton_showVisualizer
+            // 
+            this.toolStripButton_showVisualizer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton_showVisualizer.Image = global::Probotix.Mpu.Properties.Resources._1391703905_cube;
+            this.toolStripButton_showVisualizer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton_showVisualizer.Name = "toolStripButton_showVisualizer";
+            this.toolStripButton_showVisualizer.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton_showVisualizer.Text = "toolStripButton1";
+            this.toolStripButton_showVisualizer.Click += new System.EventHandler(this.toolStripButton_showVisualizer_Click);
             // 
             // panel_devices
             // 
@@ -360,59 +400,6 @@
             this.timer1.Interval = 4;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // toolStripButton_refreshports
-            // 
-            this.toolStripButton_refreshports.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton_refreshports.Image = global::Probotix.Mpu.Properties.Resources.arrow_refresh;
-            this.toolStripButton_refreshports.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton_refreshports.Name = "toolStripButton_refreshports";
-            this.toolStripButton_refreshports.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton_refreshports.Text = "toolStripButton1";
-            this.toolStripButton_refreshports.ToolTipText = "Refresh Ports";
-            this.toolStripButton_refreshports.Click += new System.EventHandler(this.toolStripButton_refreshports_Click);
-            // 
-            // toolStripButton_connect
-            // 
-            this.toolStripButton_connect.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton_connect.Image = global::Probotix.Mpu.Properties.Resources.Connect;
-            this.toolStripButton_connect.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton_connect.Name = "toolStripButton_connect";
-            this.toolStripButton_connect.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton_connect.Text = "toolStripButton1";
-            this.toolStripButton_connect.ToolTipText = "Connect";
-            this.toolStripButton_connect.Click += new System.EventHandler(this.toolStripButton_connect_Click);
-            // 
-            // toolStripButton_disconnect
-            // 
-            this.toolStripButton_disconnect.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton_disconnect.Image = global::Probotix.Mpu.Properties.Resources.Disconnect;
-            this.toolStripButton_disconnect.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton_disconnect.Name = "toolStripButton_disconnect";
-            this.toolStripButton_disconnect.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton_disconnect.Text = "toolStripButton2";
-            this.toolStripButton_disconnect.ToolTipText = "Disconnect";
-            this.toolStripButton_disconnect.Click += new System.EventHandler(this.toolStripButton_disconnect_Click);
-            // 
-            // toolStripButton_showVisualizer
-            // 
-            this.toolStripButton_showVisualizer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton_showVisualizer.Image = global::Probotix.Mpu.Properties.Resources._1391703905_cube;
-            this.toolStripButton_showVisualizer.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton_showVisualizer.Name = "toolStripButton_showVisualizer";
-            this.toolStripButton_showVisualizer.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton_showVisualizer.Text = "toolStripButton1";
-            this.toolStripButton_showVisualizer.Click += new System.EventHandler(this.toolStripButton_showVisualizer_Click);
-            // 
-            // toolStripButton1
-            // 
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton1.Text = "toolStripButton1";
-            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -480,7 +467,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn value;
         private System.Windows.Forms.ToolStripButton toolStripButton_showVisualizer;
         private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
     }
 }
 

@@ -147,7 +147,12 @@ namespace Probotix.Mpu
         private Mpu6050 _mpu6050;
         private void toolStripButton_connect_Click(object sender, EventArgs e)
         {
+            if (toolStripComboBox_com_port.SelectedItem == null )
+            {
+                return;
+            }
             _mpu6050 = new Mpu6050(toolStripComboBox_com_port.SelectedItem.ToString(), 1);
+
             if (_mpu6050.Open())
             {
                 toolStripButton_connect.Enabled = false;
@@ -285,10 +290,5 @@ namespace Probotix.Mpu
             dataGridView_device_data.Rows[rowindex].Cells[cellname].Value = value;
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-            _mpu6050.Calibrate(_deviceId, 500);
-            RefreshRegisters(_deviceId);
-        }
     }
 }

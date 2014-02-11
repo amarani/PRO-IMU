@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO.Ports;
 
 namespace Probotix.IO
 {
     public class DynamixelNetwork
     {
+        private const int Header = 0xff;
+
         /// <summary>
         /// The types of instructions that can be sent to Dynamixels using WriteInstruction.
         /// </summary>
@@ -107,9 +110,10 @@ namespace Probotix.IO
                 DataBits = 8,
                 Parity = Parity.None,
                 StopBits = StopBits.One,
+                DtrEnable = true,
                 ReadBufferSize = 2048,
                 WriteBufferSize = 2048,
-                ReadTimeout = 40,
+                ReadTimeout = 30,
                 WriteTimeout = 20
             };
             BaudNum = baudNum;
@@ -188,92 +192,137 @@ namespace Probotix.IO
             return !IsOpen;
         }
 
-        public byte[] ReadPacket(out int id)
+        private enum PacketState
+        {
+            FirstHeader,
+            SecondHeader,
+            Id,
+            Length,
+            Error,
+            Parameters,
+            Checksum
+        }
+
+
+        private bool FetchPacket(out int id, out byte[] data)
         {
             lock (_key)
             {
-                id = 0xFF; // set an invalid id for error return cases
 
-                var inputByte = Stream.ReadByte(); // 1st header byte
-                if (inputByte != 0xFF)
-                {
-                    return null;
-                }
+                id = Header;
+                int length = 0;
+                int error = 0;
+                int checksum = 0;
+                data = null;
+                var state = PacketState.FirstHeader;
 
-                inputByte = Stream.ReadByte(); // 2nd header byte
-                if (inputByte != 0xFF)
+                while (true)
                 {
-                    return null;
-                }
-
-                inputByte = Stream.ReadByte();
-                if (inputByte == 0xFF) // have seen a third header byte! not sure why/how
-                {
-                    inputByte = Stream.ReadByte();
-                }
-
-                id = inputByte;
-                var length = Stream.ReadByte() - 2;
-                if (length < 0)
-                {
-                    return null;
-                }
-                var error = Stream.ReadByte(); // TODO: Do something on Error
-                byte[] data = null;
-
-                if (length > 0)
-                {
-                    // read the data, if any
-                    data = new byte[length];
-                    int offset = 0;
-                    while (length > 0)
+                    int newByte;
+                    try
                     {
-                        int count = Stream.Read(data, offset, length);
-                        length -= count;
-                        offset += count;
+                        newByte = Stream.ReadByte();
                     }
+                    catch (Exception e)
+                    {
+                        return false;
+                    }
+
+                    switch (state)
+                    {
+                        case PacketState.FirstHeader:
+                            if (newByte == Header)
+                            {
+                                state = PacketState.SecondHeader;
+                            }
+                            break;
+
+                        case PacketState.SecondHeader:
+                            if (newByte == Header)
+                            {
+                                state = PacketState.Id;
+                            }
+                            break;
+
+                        case PacketState.Id:
+                            id = newByte;
+                            state = PacketState.Length;
+                            break;
+
+                        case PacketState.Length:
+                            length = newByte - 2;
+                            state = PacketState.Error;
+                            break;
+
+                        case PacketState.Error:
+                            error = newByte; // TODO: Call Some Events on error conditions 
+                            if (length <= 0)
+                            {
+                                data = null;
+                                state = PacketState.Checksum;
+                            }
+                            else
+                            {
+                                state = PacketState.Parameters;
+                            }
+                            break;
+
+                        case PacketState.Parameters:
+                            data = new byte[length];
+                            data[0] = (byte)newByte;
+                            length--;
+                            int offset = 1;
+                            int count;
+                            while (length > 0)
+                            {
+                                try
+                                {
+                                    count = Stream.Read(data, offset, length);
+                                    length -= count;
+                                    offset += count;
+                                }
+                                catch (Exception e)
+                                {
+                                    return false;
+                                }
+                            }
+                            state = PacketState.Checksum;
+                            break;
+                        case PacketState.Checksum:
+                            checksum = newByte; // TODO: Calculate Checksum and return false if is not eqaul to recieved checksum
+                            return true;
+                    }
+
                 }
-
-                var checkSum = Stream.ReadByte(); // TODO: Could validate the checksum and reject the packet.
-
-                return data;
-
             }
         }
 
-        private byte[] _data;
-        int _packetId;
-        private int _packetLength;
-        public byte[] ReadPacket(int id, int length)
-        {
-            // never expect a return packet from a broadcast instruction.
 
+        private int _packetId;
+        private int _packetLength;
+        private bool GetPacket(int id, int length, out byte[] data)
+        {
+            data = null;
             if (id == BroadcastId)
-                return null;
+                return false;
+
+            var sw = new Stopwatch();
+            sw.Start();
             do
             {
+                if (FetchPacket(out _packetId, out data))
+                {
+                    _packetLength = data == null ? 0 : data.Length;
+                    if (_packetId == id && _packetLength == length)
+                        return true;	// this is the normal return case
+                }
 
-                _data = ReadPacket(out _packetId);
-                _packetLength = _data == null ? 0 : _data.Length;
-                if (_packetId == id && _packetLength == length)
-                    return _data;	// this is the normal return case
+            } while (sw.ElapsedMilliseconds < Stream.ReadTimeout);
 
-            } while (true);
+            return false;
         }
 
-        public int ReadByte(int id, int address)
-        {
-            byte[] data = ReadData(id, (byte)address, 1);
-            return data[0];
-        }
-
-        public int ReadWord(int id, int address)
-        {
-            byte[] data = ReadData(id, (byte)address, 2);
-            return (data[1] << 8) + data[0];
-        }
-
-        public void WriteInstruction(int id, Instruction instruction, List<byte> parms)
+        private void WriteInstruction(int id, Instruction instruction, List<byte> parms)
         {
             lock (_key)
             {
@@ -281,8 +330,8 @@ namespace Probotix.IO
                 // [0xFF] [0xFF] [id] [length] [...data...] [checksum]
                 var instructionPacket = new List<byte>
                            {
-                               0xff,
-                               0xff,
+                               0xFF,
+                               0xFF,
                                (byte) id,
                                (byte) (((parms != null) ? parms.Count : 0) + 2), // length is the data-length + 2
                                (byte)instruction
@@ -298,31 +347,49 @@ namespace Probotix.IO
                 }
                 instructionPacket.Add((byte)(~(cheksum & 0xff)));
 
-                Stream.Write(instructionPacket.ToArray(), 0, instructionPacket.Count);
+                try
+                {
+                    Stream.Write(instructionPacket.ToArray(), 0, instructionPacket.Count);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+
             }
+        }
+
+        public int ReadByte(int id, int address)
+        {
+            byte[] data = ReadData(id, (byte)address, 1);
+            return data[0];
+        }
+
+        public int ReadWord(int id, int address)
+        {
+            byte[] data = ReadData(id, (byte)address, 2);
+            return (data[1] << 8) + data[0];
         }
 
         public byte[] ReadData(int id, byte startAddress, int count)
         {
             var parameters = new List<byte> { startAddress, (byte)count };
             WriteInstruction(id, Instruction.ReadData, parameters);
-            return ReadPacket(id, count);
+            byte[] data;
+            GetPacket(id, count, out data);
+            return data;
         }
 
         public void WriteData(int id, int startAddress, List<byte> values, bool flush)
         {
-            try
+
+            var writePacket = new List<byte> { (byte)startAddress };
+            writePacket.AddRange(values);
+            WriteInstruction(id, flush ? Instruction.WriteData : Instruction.RegWrite, writePacket);
+            if (flush)
             {
-                var writePacket = new List<byte> {(byte) startAddress};
-                writePacket.AddRange(values);
-                WriteInstruction(id, flush ? Instruction.WriteData : Instruction.RegWrite, writePacket);
-                if (flush)
-                    ReadPacket(id, 0);
-            }
-                      
-            catch (Exception)
-            {
-            
+                byte[] data;
+                GetPacket(id, 0, out data);
             }
         }
 
@@ -336,17 +403,12 @@ namespace Probotix.IO
             WriteData(id, registerAddress, new List<byte> { (byte)(value & 0xFF), (byte)(value >> 8) }, flush);
         }
 
-        public void SyncWrite(byte startAddress, int numberOfDynamixels, List<byte> parms)
-        {
-            // Todo : To be implemented soon ! 
-        }
-
         public List<int> ScanIds(int startId, int endId)
         {
             if (endId > 253 || endId < 0)
-                throw new ArgumentException("endID must be 0 to 253");
+                return null;
             if (startId > endId || startId < 0)
-                throw new OverflowException("startID must be 0 to endID");
+                return null;
 
             var ids = new List<int>();
             for (int id = startId; id <= endId; id++)
@@ -365,15 +427,8 @@ namespace Probotix.IO
         public bool Ping(int id)
         {
             WriteInstruction(id, Instruction.Ping, null);
-            try
-            {
-                ReadPacket(id, 0);
-            }
-            catch (TimeoutException)
-            {
-                return false;
-            }
-            return true;
+            byte[] data;
+            return GetPacket(id, 0, out data);
         }
 
     }
