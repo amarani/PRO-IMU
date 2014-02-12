@@ -28,7 +28,7 @@ namespace MPU6050{
 		I2C::ReStart();
 		
 		I2C::WriteDeviceAddress(MPU6050_DEVICE_ADRESS,TW_READ); // Device address
-		unsigned char temp = I2C::ReadByte();
+		unsigned char temp = I2C::ReadLastByte();
 		
 		I2C::Stop();
 		
