@@ -36,9 +36,9 @@ namespace Uart{
 		
 		UBRRH = (ubbr>>8);
 		UBRRL = ubbr;
- 
 		
-        UCSRB = (1<<RXEN)|(1<<TXEN); // Enable receiver and transmitter
+		
+		UCSRB = (1<<RXEN)|(1<<TXEN); // Enable receiver and transmitter
 		UCSRC = (1<<URSEL)|(1<<UCSZ0)|(1<<UCSZ1); // Set frame format to 8 data bits, no parity, 1 stop bit
 		
 	}
@@ -106,6 +106,7 @@ namespace Uart{
 
 	void DisableRxInterrupt(){
 		UCSRB &= ~(1 << RXCIE);
+		rxInterrupt = NULL;
 	}
 
 	void EnableTxInterrupt(void (*fptr)()){
@@ -114,16 +115,24 @@ namespace Uart{
 	}
 
 	void DisableTxInterrupt(){
-		
+
 		UCSRB &= ~(1 << TXCIE);
+		txInterrupt = NULL;
 	}
 
 	ISR(USART_RXC_vect){
-		rxInterrupt();
+		if (rxInterrupt!=NULL)
+		{
+			rxInterrupt();
+		}
+		
 	}
 
 	ISR(USART_TXC_vect){
-		txInterrupt();
-	}}
+		if (txInterrupt!=NULL)
+		{
+			txInterrupt();
+		}
+	}
+}
 
-	

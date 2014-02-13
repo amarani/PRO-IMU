@@ -28,6 +28,7 @@ extern "C" {
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stddef.h>
 
 // Comment/delete those lines to disable interrupt definition for that timer
 // so you can define your own ISR functions without conflicts.
